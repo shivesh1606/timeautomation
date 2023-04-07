@@ -16,8 +16,6 @@ import csv
 import pandas as pd
 import openpyxl
 import os
-# If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 def get_events(service):
     # Call the Calendar API    
@@ -33,26 +31,42 @@ def get_events_by_date(api_service, event_date):
     split_date = event_date.split('-')
 
     event_date = datetime(int(split_date[0]), int(split_date[1]), int(split_date[2]), 00, 00, 00, 0)
-    event_date = pytz.UTC.localize(event_date).isoformat()
-
+    # event_date = pytz.UTC.localize(event_date).isoformat()
+    event_date=datetime.strftime(event_date, '%Y-%m-%dT%H:%M:%S.%fZ')
     end = datetime(int(split_date[0]), int(split_date[1]), int(split_date[2]), 23, 59, 59, 999999)
-    end = pytz.UTC.localize(end).isoformat()
-
-    events_result = api_service.events().list(calendarId='primary', timeMin=event_date,timeMax=end, timeZone="UTC").execute()
+    end=datetime.strftime(end, '%Y-%m-%dT%H:%M:%S.%fZ')
+    print(">>>>>>>>>>> Gettings events for date: ", event_date)
+    events_result = api_service.events().list(calendarId='primary', timeMin=event_date,timeMax=end,singleEvents=True,orderBy='startTime').execute()
     return events_result.get('items', [])
 
 def get_events_by_date_range(api_service, start_Date, end_Date):
+    start_Date=datetime.strptime(start_Date, '%Y-%m-%d')
+    end_Date=datetime.strptime(end_Date, '%Y-%m-%d')
+    end_Date=end_Date+timedelta(days=1)
+    date_range=[start_Date+timedelta(days=x) for x in range((end_Date-start_Date).days)]
+    event_list=[]
+    for date in date_range:
+        date=date.strftime('%Y-%m-%d')
+        events=get_events_by_date(api_service,str(date))
+        for event in events:
+            event_list.append(event)
+    
+    return event_list
+    # start_split_date = start_Date.split('-')
+    # end_split_date = end_Date.split('-')
+    # event_start_date = datetime(int(start_split_date[0]), int(start_split_date[1]), int(start_split_date[2]), 00, 00, 00, 0)
+    # event_start_date = pytz.UTC.localize(event_start_date).isoformat()
 
-    start_split_date = start_Date.split('-')
-    end_split_date = end_Date.split('-')
-    event_start_date = datetime(int(start_split_date[0]), int(start_split_date[1]), int(start_split_date[2]), 00, 00, 00, 0)
-    event_start_date = pytz.UTC.localize(event_start_date).isoformat()
+    # event_end_date = datetime(int(end_split_date[0]), int(end_split_date[1]), int(end_split_date[2]), 23, 59, 59, 999999)
+    # event_end_date = pytz.UTC.localize(event_end_date).isoformat()
+    # print("Start date is  ",event_start_date)
+    # print("End date is  ",event_end_date)
+    # events_result = api_service.events().list(calendarId='primary', timeMin=event_start_date,timeMax=event_end_date, timeZone="UTC").execute()
+    # print(events_result)
+    # return events_result.get('items', [])
+# If modifying these scopes, delete the file token.json.
+SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
-    event_end_date = datetime(int(end_split_date[0]), int(end_split_date[1]), int(end_split_date[2]), 23, 59, 59, 999999)
-    event_end_date = pytz.UTC.localize(event_end_date).isoformat()
-
-    events_result = api_service.events().list(calendarId='primary', timeMin=event_start_date,timeMax=event_end_date, timeZone="UTC").execute()
-    return events_result.get('items', [])
 
 def main():
     """Shows basic usage of the Google Calendar API.
@@ -108,6 +122,7 @@ def main():
             else:
                 print("Invalid choice")
                 continue
+
             for event in events:
                     try:
                         start = event['start'].get('dateTime', event['start'].get('date'))
@@ -125,12 +140,14 @@ def main():
                             location=event['location']
                         except Exception as e:
                             pass
-                        print(event_start_date,event_end_date,event_start_time,event_end_time)
                         title=event['summary']
                         creator=event['creator']['email']
                         attendees=[]
-                        for attendee in event['attendees']:
-                            attendees.append(attendee['email'])
+                        try:
+                            for attendee in event['attendees']:
+                                attendees.append(attendee['email'])
+                        except:
+                            pass
                         event_dict={
                             "title":title,
                             "creator":creator,
@@ -143,7 +160,6 @@ def main():
 
                         }
                         event_list=[title,creator,attendees,event_start_date,event_start_time,event_end_date,event_end_time,location]
-                        print(event_list)
                         list_of_events.append(event_list)
                     except Exception as e:
                         print(e)
@@ -160,7 +176,6 @@ def main():
             df.rename(columns=dict_header,
             inplace=True)
             print(df)
-
             df.to_csv("SavedCalendar.csv",index=False)
             if not events:
                 print('No upcoming events found.')
