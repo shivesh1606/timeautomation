@@ -2,14 +2,15 @@
 from tkinter import *
 from tkcalendar import Calendar
 from tkcalendar import DateEntry
-from start import main, auth, is_authenticated
+from start import main, auth, is_authenticated,deauth,get_token,get_user_profile
 import tkinter.messagebox as tmsg
 import tkinter as tk
 def say_hello(root, message):
     tk.messagebox.showinfo("Info", message)
+
 # Create Object
 root = Tk()
-# root.after(1, say_hello, root, "Hello, world")
+
 scrollbar = Scrollbar(root)
 scrollbar.pack( side = RIGHT, fill = Y )
 CheckVar1 = IntVar()
@@ -25,8 +26,11 @@ auth_label.pack(pady=5)
 root.geometry("400x500")
 def callback(self):
     if is_authenticated():
+        token =get_token()
+        user_profile=get_user_profile(token)
+        print(user_profile)
         print("Authenticated")
-        CheckVarAuth.set("Authenticated")
+        CheckVarAuth.set("Authenticated user is "+user_profile['name'])
     else:
         print("Not Authenticated")
         CheckVarAuth.set("Not Authenticated")
@@ -40,19 +44,21 @@ root.bind('<Visibility>', callback) # call `callback` whenever `root` becomes vi
 
 
 def authenticate():
-	# global CheckVarAuth
-    # print(CheckVarAuth.get())
     print("10")
     creds = auth()
     if creds:
+        token =get_token()
+        user_profile=get_user_profile(token)
+        print(user_profile)
         print("Authenticated")
-        CheckVarAuth.set( " Already Authenticated")
-
-        # auth_label.config(textvariable.set("Authenticated"))
-
-
+        CheckVarAuth.set("Authenticated user is "+user_profile['name'])
+def deauthenticate():
+    if deauth():
+        CheckVarAuth.set("Not Authenticated")
 Button(root, text="Authenticate",
-       command=authenticate).pack(pady=20)
+       command=authenticate).pack(pady=5)
+Button(root, text="Deauthenticate",
+       command=deauthenticate).pack(pady=5)
 
 label1 = Label(root, text="Synchronise from the last Date")
 label1.pack(pady=5)
@@ -74,8 +80,8 @@ cal.pack(padx=10, pady=10)
 
 def grad_date():
     start_date = cal.get_date()
-    date_range1 = cal_range2.get_date()
-    date_range2 = cal_range1.get_date()
+    date_range1 = cal_range1.get_date()
+    date_range2 = cal_range2.get_date()
     if CheckVar1.get() == 1:
         print("Synchronise on Date")
         print(start_date)

@@ -20,17 +20,37 @@ def deauth():
     try:
         os.remove('token.json')
         print("Token Removed")
-        return True
     except:
         print("Token Not Found")
-        return False
-
-#find token.json file
+    return True
+#find token.json file and return credentials
 def is_authenticated():
     if os.path.isfile('token.json'):
         return True
     else:
         return False
+def get_token():
+    if os.path.isfile('token.json'):
+        token=open('token.json')
+        token=token.read()
+        token=token.split('"')
+        token=token[3]
+        print(token)
+
+        return token
+    else:
+        return False
+
+def get_user_profile(token):
+    url= "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token="+token
+    response=requests.get(url)
+    return response.json()
+    # if os.path.isfile('token.json'):
+    #     #return access token
+    #     token = open('token.json')
+    #     return token['to']
+    # else:
+    #     return False
 
 def get_events(service):
     # Call the Calendar API    
@@ -80,9 +100,10 @@ def get_events_by_date_range(api_service, start_Date, end_Date):
     # print(events_result)
     # return events_result.get('items', [])
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar.readonly','https://www.googleapis.com/auth/userinfo.profile']
+
 def get_user_info(token):
-    url="https://www.googleapis.com/oauth2/v3/userinfo?access_token="+token
+    url= "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token="+token
     response=requests.get(url)
     print(response.json())
 
@@ -187,7 +208,13 @@ def main(query,start_Date=None,end_Date=None):
     if os.path.exists(path+"SavedCalendar.csv"):
         os.remove(path+"SavedCalendar.csv")
     print(path+"SavedCalendar.csv")
+
     filepath=os.path.join(path,"SavedCalendar.csv")
+    if query==2:
+        filepath=os.path.join(path,"SavedCalendar_"+start_Date+".csv")
+    elif query==3:
+        filepath=os.path.join(path,"SavedCalendar_"+start_Date+"_"+end_Date+".csv")
+
     df.to_csv(filepath,index=False)
     if not events:
         print('No upcoming events found.')
