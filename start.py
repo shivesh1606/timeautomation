@@ -66,12 +66,13 @@ def get_events_by_date_range(api_service, start_Date, end_Date):
     # return events_result.get('items', [])
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+def get_user_info(token):
+    url="https://www.googleapis.com/oauth2/v3/userinfo?access_token="+token
+    response=requests.get(url)
+    print(response.json())
 
-
-def main():
-    """Shows basic usage of the Google Calendar API.
-    Prints the start and name of the next 10 events on the user's calendar.
-    """
+def auth():
+    print("Something")
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -89,104 +90,92 @@ def main():
         # Save the credentials for the next run
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
+    return creds
 
-    try:
-        # token=""
-        # with open('token.json', 'r') as token:
-        #     token = token.read()
-        # request_url="https://www.googleapis.com/oauth2/v3/userinfo?access_token={"+token+"}"
-        # r=requests.get(request_url)
-        # print(r.text)
-        service = build('calendar', 'v3', credentials=creds)
-        qurey=4
-        event_dict_list=[]
-        list_of_events=[]
-        while (qurey!=0):
-            print("0. Exit")
-            print("1. Get all events")
-            print("2. Get events by date")
-            print("3. Get events by date range")
-            qurey=int(input("Enter your choice: "))
-            if qurey==1:
-                events=get_events(service)
-            elif qurey==2:
-                start_Date=input("Enter start date YYYY-MM-DD: ")
+def main(query,start_Date=None,end_Date=None):
+    """Shows basic usage of the Google Calendar API.
+    Prints the start and name of the next 10 events on the user's calendar.
+    """
+    print("Going for Credentials")
+    creds = auth()
+    print(creds)
+    print(creds.token)
+    print(get_user_info(creds.token))
+    service = build('calendar', 'v3', credentials=creds)
+    event_dict_list=[]
+    list_of_events=[]
+    if query==1:
+        events=get_events(service)
+    elif query==2:
+        events=get_events_by_date(service,start_Date)
+    elif query==3:
+        events=get_events_by_date_range(service,start_Date,end_Date)
+    else:
+        print("Invalid choice")
 
-                events=get_events_by_date(service,start_Date)
-            elif qurey==3:
-                start_Date=input("Enter start date YYYY-MM-DD: ")
-                end_Date=input("Enter end date YYYY-MM-DD: ")
-                events=get_events_by_date_range(service,start_Date,end_Date)
-            elif qurey==0:
-                break
-            else:
-                print("Invalid choice")
-                continue
+    for event in events:
+            try:
+                start = event['start'].get('dateTime', event['start'].get('date'))
+                end=event['end'].get('dateTime', event['end'].get('date'))
+                event_start_date = datetime.strptime(start, '%Y-%m-%dT%H:%M:%S%z')
+                event_start_date=event_start_date.astimezone(pytz.timezone('Asia/Kolkata'))
+                event_end_date = datetime.strptime(end, '%Y-%m-%dT%H:%M:%S%z')
+                event_end_date=event_end_date.astimezone(pytz.timezone('Asia/Kolkata'))
+                event_start_time=event_start_date.strftime("%H:%M:%S")
+                event_end_time=event_end_date.strftime("%H:%M:%S")
+                event_start_date=event_start_date.strftime("%Y-%m-%d")
+                event_end_date=event_end_date.strftime("%Y-%m-%d")
+                location=''
+                try:
+                    location=event['location']
+                except Exception as e:
+                    pass
+                title=event['summary']
+                creator=event['creator']['email']
+                attendees=[]
+                try:
+                    for attendee in event['attendees']:
+                        attendees.append(attendee['email'])
+                except:
+                    pass
+                event_dict={
+                    "title":title,
+                    "creator":creator,
+                    "attendees":attendees,
+                    "start_date":event_start_date,
+                    "start_time":event_start_time,
+                    "end_date":event_end_date,
+                    "end_time":event_end_time,
+                    "location":location
 
-            for event in events:
-                    try:
-                        start = event['start'].get('dateTime', event['start'].get('date'))
-                        end=event['end'].get('dateTime', event['end'].get('date'))
-                        event_start_date = datetime.strptime(start, '%Y-%m-%dT%H:%M:%S%z')
-                        event_start_date=event_start_date.astimezone(pytz.timezone('Asia/Kolkata'))
-                        event_end_date = datetime.strptime(end, '%Y-%m-%dT%H:%M:%S%z')
-                        event_end_date=event_end_date.astimezone(pytz.timezone('Asia/Kolkata'))
-                        event_start_time=event_start_date.strftime("%H:%M:%S")
-                        event_end_time=event_end_date.strftime("%H:%M:%S")
-                        event_start_date=event_start_date.strftime("%Y-%m-%d")
-                        event_end_date=event_end_date.strftime("%Y-%m-%d")
-                        location=''
-                        try:
-                            location=event['location']
-                        except Exception as e:
-                            pass
-                        title=event['summary']
-                        creator=event['creator']['email']
-                        attendees=[]
-                        try:
-                            for attendee in event['attendees']:
-                                attendees.append(attendee['email'])
-                        except:
-                            pass
-                        event_dict={
-                            "title":title,
-                            "creator":creator,
-                            "attendees":attendees,
-                            "start_date":event_start_date,
-                            "start_time":event_start_time,
-                            "end_date":event_end_date,
-                            "end_time":event_end_time,
-                            "location":location
-
-                        }
-                        event_list=[title,creator,attendees,event_start_date,event_start_time,event_end_date,event_end_time,location]
-                        list_of_events.append(event_list)
-                    except Exception as e:
-                        print(e)
-                        pass 
-            dict_header = {0:'Title',
-            1:'Creator' ,
-            2:'Attendees',
-            3:'Start Date',
-            4:'Start Time',
-            5:'End Date',
-            6:'End Time',
-            7:'Location'}
-            df=pd.DataFrame(list_of_events)
-            df.rename(columns=dict_header,
-            inplace=True)
-            print(df)
-            df.to_csv("SavedCalendar.csv",index=False)
-            if not events:
-                print('No upcoming events found.')
-                return
-            qurey=0
-        
-
-
-    except HttpError as error:
-        print('An error occurred: %s' % error)
-
-
+                }
+                event_list=[title,creator,attendees,event_start_date,event_start_time,event_end_date,event_end_time,location]
+                list_of_events.append(event_list)
+            except Exception as e:
+                print(e)
+                pass 
+    dict_header = {0:'Title',
+    1:'Creator' ,
+    2:'Attendees',
+    3:'Start Date',
+    4:'Start Time',
+    5:'End Date',
+    6:'End Time',
+    7:'Location'}
+    df=pd.DataFrame(list_of_events)
+    df.rename(columns=dict_header,
+    inplace=True)
+    BaseDir=os.path.dirname(os.path.abspath(__file__))
+    path=os.path.join(BaseDir,"SavedCalendar/")
+    if not os.path.exists(path):
+        os.makedirs(path)
+    if os.path.exists(path+"SavedCalendar.csv"):
+        os.remove(path+"SavedCalendar.csv")
+    print(path+"SavedCalendar.csv")
+    filepath=os.path.join(path,"SavedCalendar.csv")
+    df.to_csv(filepath,index=False)
+    if not events:
+        print('No upcoming events found.')
+        return
 if __name__ == '__main__':
     main()
