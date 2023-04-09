@@ -16,6 +16,21 @@ import csv
 import pandas as pd
 import openpyxl
 import os
+def deauth():
+    try:
+        os.remove('token.json')
+        print("Token Removed")
+        return True
+    except:
+        print("Token Not Found")
+        return False
+
+#find token.json file
+def is_authenticated():
+    if os.path.isfile('token.json'):
+        return True
+    else:
+        return False
 
 def get_events(service):
     # Call the Calendar API    

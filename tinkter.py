@@ -2,17 +2,16 @@
 from tkinter import *
 from tkcalendar import Calendar
 from tkcalendar import DateEntry
-from start import main, auth
+from start import main, auth, is_authenticated
 import tkinter.messagebox as tmsg
+import tkinter as tk
+def say_hello(root, message):
+    tk.messagebox.showinfo("Info", message)
 # Create Object
 root = Tk()
+# root.after(1, say_hello, root, "Hello, world")
 scrollbar = Scrollbar(root)
 scrollbar.pack( side = RIGHT, fill = Y )
-
-# Set geometry
-root.geometry("400x500")
-# variable to store the date
-
 CheckVar1 = IntVar()
 CheckVar2 = IntVar()
 CheckVarAuth = StringVar()
@@ -20,6 +19,24 @@ CheckVarAuth = StringVar()
 CheckVarAuth.set("Not Authenticated")
 auth_label = Label(root, textvariable=CheckVarAuth)
 auth_label.pack(pady=5)
+
+# Set geometry
+
+root.geometry("400x500")
+def callback(self):
+    if is_authenticated():
+        print("Authenticated")
+        CheckVarAuth.set("Authenticated")
+    else:
+        print("Not Authenticated")
+        CheckVarAuth.set("Not Authenticated")
+
+    root.unbind('<Visibility>') # only call `callback` the first time `root` becomes visible
+
+root.bind('<Visibility>', callback) # call `callback` whenever `root` becomes visible
+# variable to store the date
+
+
 
 
 def authenticate():
