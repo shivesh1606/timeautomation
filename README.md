@@ -39,7 +39,7 @@ Navigate to the project directory.
 Run the following command to start the program:
 
 Copy code
-python start.py
+python tinkter.py
 This command will execute the start.py file and the program will start running.
 ```
 ###Deactivating Virtual Environment
