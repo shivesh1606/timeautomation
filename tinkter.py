@@ -2,17 +2,21 @@
 from tkinter import *
 from tkcalendar import Calendar
 from tkcalendar import DateEntry
-from start import main, auth, is_authenticated,deauth,get_token,get_user_profile
+from start import main, auth, is_authenticated, deauth, get_token, get_user_profile
 import tkinter.messagebox as tmsg
 import tkinter as tk
+
+
 def say_hello(root, message):
     tk.messagebox.showinfo("Info", message)
 
+
 # Create Object
 root = Tk()
-
+# Define Title
+root.title('Time Sheet Automation')
 scrollbar = Scrollbar(root)
-scrollbar.pack( side = RIGHT, fill = Y )
+scrollbar.pack(side=RIGHT, fill=Y)
 CheckVar1 = IntVar()
 CheckVar2 = IntVar()
 CheckVarAuth = StringVar()
@@ -24,10 +28,12 @@ auth_label.pack(pady=5)
 # Set geometry
 
 root.geometry("400x500")
+
+
 def callback(self):
     if is_authenticated():
-        token =get_token()
-        user_profile=get_user_profile(token)
+        token = get_token()
+        user_profile = get_user_profile(token)
         print(user_profile)
         print("Authenticated")
         CheckVarAuth.set("Authenticated user is "+user_profile['name'])
@@ -35,26 +41,31 @@ def callback(self):
         print("Not Authenticated")
         CheckVarAuth.set("Not Authenticated")
 
-    root.unbind('<Visibility>') # only call `callback` the first time `root` becomes visible
+    # only call `callback` the first time `root` becomes visible
+    root.unbind('<Visibility>')
 
-root.bind('<Visibility>', callback) # call `callback` whenever `root` becomes visible
+
+# call `callback` whenever `root` becomes visible
+root.bind('<Visibility>', callback)
 # variable to store the date
-
-
 
 
 def authenticate():
     print("10")
     creds = auth()
     if creds:
-        token =get_token()
-        user_profile=get_user_profile(token)
+        token = get_token()
+        user_profile = get_user_profile(token)
         print(user_profile)
         print("Authenticated")
         CheckVarAuth.set("Authenticated user is "+user_profile['name'])
+
+
 def deauthenticate():
     if deauth():
         CheckVarAuth.set("Not Authenticated")
+
+
 Button(root, text="Authenticate",
        command=authenticate).pack(pady=5)
 Button(root, text="Deauthenticate",
@@ -92,11 +103,12 @@ def grad_date():
         print(date_range1)
         print(date_range2)
         main(3, str(date_range1), str(date_range2))
-        date.config(text="Date Sync Range is from" + str(date_range1) + " to " + str(date_range2))
-    tmsg.showinfo("CSV Saved", f"CSV File is saved in the current directory")
+        date.config(text="Date Sync Range is from" +
+                    str(date_range1) + " to " + str(date_range2))
+    tmsg.showinfo(
+        "CSV Saved", f"CSV File is saved in the SavedCalendar directory")
     print(start_date)
     print(CheckVar1.get())
-    
 
 
 def _show_value(*pargs):
