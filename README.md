@@ -5,10 +5,13 @@ This project is a Python project that requires setting up a virtual environment 
 It is recommended to use a virtual environment to isolate the project's dependencies from the system-level Python installation. Follow these steps to set up a virtual environment:
 
 ##Install virtualenv package using pip by running the following command:
-```Copy code
+Copy code
+```
 pip install virtualenv
+```
 Create a new virtual environment by running the following command:
 Copy code
+```
 virtualenv venv
 This command will create a new directory named venv that will contain a new Python environment.
 ```
